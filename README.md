@@ -4,6 +4,7 @@
 `go test ./... -v`
 
 ## Folder structure
+```
 .
 ├── api
 │   ├── handlers  *Test of the handler, it uses the mockService to isolate the handler
@@ -19,5 +20,5 @@
     ├── dto       *Data transfer objects to api user
     │   └── projects.go
     └── projects.go
-
+```
 
