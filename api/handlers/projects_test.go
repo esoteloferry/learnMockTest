@@ -10,11 +10,29 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+var app *fiber.App
+var ph Projects
+var mockService *services.MockIProjects
+
+func setup(t *testing.T)func(){
+  ctrl:= gomock.NewController(t)
+  mockService= services.NewMockIProjects(ctrl)
+
+  ph = Projects{
+    Service: mockService,
+  }
+  app= fiber.New()
+  return func(){
+    app= nil//Reset app
+    defer ctrl.Finish()
+  }
+}
+
 func Test_should_return_all_projects_with_status_code_200(t *testing.T){
   // Arrange 
-  ctrl:= gomock.NewController(t)
-  defer ctrl.Finish()
-  mockService:= services.NewMockIProjects(ctrl)
+  teardown:=setup(t)
+  defer teardown()
+  // Expectations
   MockedProjects:=[]dto.ProjectsResponse{
       {
         Id: "123",
@@ -22,14 +40,8 @@ func Test_should_return_all_projects_with_status_code_200(t *testing.T){
       },
     }
   mockService.EXPECT().GetAllProjects().Return(MockedProjects, nil)
-  ph := Projects{
-    Service: mockService,
-  }
-
   // call the code we are testing
-  app:= fiber.New()
   app.Get("/getprojects", ph.GetAll)
-
   req,_:=http.NewRequest(http.MethodGet, "/getprojects", nil)
   res, err:= app.Test(req, -1)
   // Assert
@@ -42,18 +54,12 @@ func Test_should_return_all_projects_with_status_code_200(t *testing.T){
 }
 func Test_should_return_status_code_500_with_error_message(t *testing.T){
   // Arrange 
-  ctrl:= gomock.NewController(t)
-  defer ctrl.Finish()
-  mockService:= services.NewMockIProjects(ctrl)
+  teardown:=setup(t)
+  defer teardown()
+  // Expectations
   mockService.EXPECT().GetAllProjects().Return(nil,dto.NewUnexpectedError())
-  ph := Projects{
-    Service: mockService,
-  }
-
   // call the code we are testing
-  app:= fiber.New()
   app.Get("/getprojects", ph.GetAll)
-
   req,_:=http.NewRequest(http.MethodGet, "/getprojects", nil)
   res, err:= app.Test(req, -1)
   // Assert
