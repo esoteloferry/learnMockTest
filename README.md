@@ -1,24 +1,26 @@
-# Learning fiber + testify/mock !
+# Learning fiber + gomock!
 
 ## Only to run test
-`go test ./... -v`
+`./test`
 
 ## Folder structure
 ```
 .
-├── api
-│   ├── handlers  *Test of the handler, it uses the mockService to isolate the handler
+├── README.md
+├── api                  *Test of the handler, it uses the mocks to isolate the handler
+│   ├── handlers
 │   │   ├── projects.go
 │   │   └── projects_test.go
 │   └── router
 │       └── projects.go
 ├── go.mod
 ├── go.sum
-├── mockServices  *Mock of the services
+├── mocks                 *Mock of the services
+│   └── services
+│       └── mockProjectsService.go
+├── services
+│   ├── dto               *Data transfer objects to api user
+│   │   └── projects.go
 │   └── projects.go
-└── services
-    ├── dto       *Data transfer objects to api user
-    │   └── projects.go
-    └── projects.go
 ```
 
