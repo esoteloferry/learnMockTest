@@ -3,6 +3,7 @@ package services
 import (
   "github.com/esoteloferry/learnMockTest/services/dto"
 )
+//go:generate mockgen -destination=../mocks/services/mockProjectsService.go -package=services github.com/esoteloferry/learnMockTest/services IProjects
 type IProjects interface{
   GetAllProjects() ([]dto.ProjectsResponse, *dto.AppError)
 }

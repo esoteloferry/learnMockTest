@@ -4,46 +4,63 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/esoteloferry/learnMockTest/mockServices"
+	"github.com/esoteloferry/learnMockTest/mocks/services"
 	"github.com/esoteloferry/learnMockTest/services/dto"
 	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
+	"github.com/golang/mock/gomock"
 )
 
 func Test_should_return_all_projects_with_status_code_200(t *testing.T){
-  assert:=assert.New(t)
-  // create an instance of our test object
-  mockService:= mockServices.MockProjects{}
-  // setup expectations
-  mockedProjects:=[]dto.ProjectsResponse{
-    {
-      Id: "123",
-      Name: "Test1",
-    },
+  // Arrange 
+  ctrl:= gomock.NewController(t)
+  defer ctrl.Finish()
+  mockService:= services.NewMockIProjects(ctrl)
+  MockedProjects:=[]dto.ProjectsResponse{
+      {
+        Id: "123",
+        Name: "Test1",
+      },
+    }
+  mockService.EXPECT().GetAllProjects().Return(MockedProjects, nil)
+  ph := Projects{
+    Service: mockService,
   }
-  mockService.On("GetAllProjects").Return(mockedProjects, nil)
+
   // call the code we are testing
-  // SETUP API
   app:= fiber.New()
-  mockHandler:= Projects{
-    Service: &mockService,
+  app.Get("/getprojects", ph.GetAll)
+
+  req,_:=http.NewRequest(http.MethodGet, "/getprojects", nil)
+  res, err:= app.Test(req, -1)
+  // Assert
+  if res.StatusCode!= http.StatusOK{
+    t.Error("Failed while testing status code")
   }
-  app.Get("/getprojects", mockHandler.GetAll)
-  // SETUP REQUEST
-  // Create a new http request with the route
-  // from the test case
-  req, _ := http.NewRequest(
-    "GET",
-    "/getprojects",
-    nil,
-  )
-  // Perform the request plain with the app.
-  // The -1 disables request latency.
-  res, err := app.Test(req, -1)
-  // verify that no error occured, that is not expected
-  assert.NotNil(err, "There should not be an error")
-  // Verify if the status code is as expected
-  assert.Equal(200, res.StatusCode, "Status ok")
-  // assert that the expectations were met
-  mockService.AssertExpectations(t)
+  if err!=nil{
+    t.Error("Some error happened")
+  }
+}
+func Test_should_return_status_code_500_with_error_message(t *testing.T){
+  // Arrange 
+  ctrl:= gomock.NewController(t)
+  defer ctrl.Finish()
+  mockService:= services.NewMockIProjects(ctrl)
+  mockService.EXPECT().GetAllProjects().Return(nil,dto.NewUnexpectedError())
+  ph := Projects{
+    Service: mockService,
+  }
+
+  // call the code we are testing
+  app:= fiber.New()
+  app.Get("/getprojects", ph.GetAll)
+
+  req,_:=http.NewRequest(http.MethodGet, "/getprojects", nil)
+  res, err:= app.Test(req, -1)
+  // Assert
+  if res.StatusCode!= http.StatusInternalServerError{
+    t.Error("Failed while testing status code")
+  }
+  if err!=nil{
+    t.Error("Some error happened")
+  }
 }
