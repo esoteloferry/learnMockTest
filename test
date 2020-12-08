@@ -1,0 +1,7 @@
+#!/bin/bash
+# Delete old mocks
+rm -r mocks
+# Create new mocks
+go generate ./...
+# Run tests
+go test ./... -v
